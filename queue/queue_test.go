@@ -2,6 +2,7 @@ package queue
 
 import (
 	"strconv"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -98,6 +99,37 @@ func TestQueueCorrectness(t *testing.T) {
 
 			item := q.Dequeue()
 			assert.True(t, item.IsEmpty())
+			assert.Equal(t, q.Len(), int64(0))
+		},
+		"Queue Dequeue correctness": func(t *testing.T, q Queue[string]) {
+			assert.Equal(t, q.Len(), int64(0))
+			for idx := range 1000 {
+				addVal := "test" + strconv.FormatInt(int64(idx), 10)
+				assert.True(t, q.Enqueue(addVal))
+				assert.Equal(t, q.Len(), int64(1))
+
+				item := q.Dequeue()
+				assert.False(t, item.IsEmpty())
+				assert.Equal(t, item.Unwrap(), addVal)
+				assert.Equal(t, q.Len(), int64(0))
+			}
+			assert.Equal(t, q.Len(), int64(0))
+		},
+		"Check Race Condition": func(t *testing.T, q Queue[string]) {
+			assert.Equal(t, q.Len(), int64(0))
+			wg := sync.WaitGroup{}
+			wg.Add(defaultQSize)
+			for idx := range defaultQSize {
+				go func() {
+					defer wg.Done()
+					addVal := "test" + strconv.FormatInt(int64(idx), 10)
+					assert.True(t, q.Enqueue(addVal))
+
+					item := q.Dequeue()
+					assert.False(t, item.IsEmpty())
+				}()
+			}
+			wg.Wait()
 			assert.Equal(t, q.Len(), int64(0))
 		},
 	}
