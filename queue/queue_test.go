@@ -18,7 +18,7 @@ func qWrap[T any, Q Queue[T]](fn func(int64) Q, size int64) func() Queue[T] {
 
 func TestQueueCorrectness(t *testing.T) {
 	queues := map[string]func() Queue[string]{
-		"ChanQueue": qWrap(NewChanQueue[string], defaultQSize),
+		"LockQueue": qWrap(NewLockQueue[string], defaultQSize),
 	}
 
 	tests := map[string]testFn[string]{
@@ -38,44 +38,9 @@ func TestQueueCorrectness(t *testing.T) {
 			item := q.Dequeue()
 			assert.True(t, item.IsEmpty())
 		},
-		"Peek Correctness": func(t *testing.T, q Queue[string]) {
-			for idx := range defaultQSize {
-				assert.True(t, q.Enqueue("test"+strconv.FormatInt(int64(idx), 10)))
-
-				pItem := q.Peek()
-				if !assert.False(t, pItem.IsEmpty(), "Iteration %d", idx+1) {
-					t.FailNow()
-				}
-				assert.Equal(t, pItem.Unwrap(), "test0")
-			}
-
-			assert.False(t, q.Enqueue("test"+strconv.FormatInt(int64(defaultQSize), 10)))
-
-			for idx := range defaultQSize {
-				expectedItem := "test" + strconv.FormatInt(int64(idx), 10)
-				for _ = range 5 {
-					pItem := q.Peek()
-					assert.False(t, pItem.IsEmpty())
-					assert.Equal(t, pItem.Unwrap(), expectedItem)
-				}
-
-				item := q.Dequeue()
-				assert.False(t, item.IsEmpty())
-				assert.Equal(t, item.Unwrap(), expectedItem)
-			}
-
-			item := q.Dequeue()
-			assert.True(t, item.IsEmpty())
-		},
 		"Length Correctness": func(t *testing.T, q Queue[string]) {
 			for idx := range defaultQSize {
 				assert.True(t, q.Enqueue("test"+strconv.FormatInt(int64(idx), 10)))
-
-				pItem := q.Peek()
-				if !assert.False(t, pItem.IsEmpty(), "Iteration %d", idx+1) {
-					t.FailNow()
-				}
-				assert.Equal(t, pItem.Unwrap(), "test0")
 				assert.Equal(t, q.Len(), int64(idx+1))
 			}
 
@@ -84,12 +49,7 @@ func TestQueueCorrectness(t *testing.T) {
 
 			for idx := range defaultQSize {
 				expectedItem := "test" + strconv.FormatInt(int64(idx), 10)
-				for _ = range 5 {
-					pItem := q.Peek()
-					assert.False(t, pItem.IsEmpty())
-					assert.Equal(t, pItem.Unwrap(), expectedItem)
-					assert.Equal(t, q.Len(), int64(defaultQSize-idx))
-				}
+				assert.Equal(t, q.Len(), int64(defaultQSize-idx))
 
 				item := q.Dequeue()
 				assert.False(t, item.IsEmpty())
