@@ -2,8 +2,6 @@ package queue
 
 import (
 	"sync"
-
-	"github.com/Jh123x/go-collections/optional"
 )
 
 var (
@@ -11,16 +9,16 @@ var (
 )
 
 type LockQueue[T any] struct {
-	buffer  []optional.Optional[T]
+	buffer  []T
 	mux     *sync.Mutex
-	start   int64
-	end     int64
-	maxSize int64
+	start   int
+	end     int
+	maxSize int
 }
 
-func NewLockQueue[T any](len int64) *LockQueue[T] {
+func NewLockQueue[T any](len int) *LockQueue[T] {
 	return &LockQueue[T]{
-		buffer:  make([]optional.Optional[T], len+1),
+		buffer:  make([]T, len+1),
 		mux:     &sync.Mutex{},
 		start:   0,
 		end:     0,
@@ -28,7 +26,7 @@ func NewLockQueue[T any](len int64) *LockQueue[T] {
 	}
 }
 
-func (q *LockQueue[T]) Len() int64 {
+func (q *LockQueue[T]) Len() int {
 	q.mux.Lock()
 	diff := q.end - q.start
 	q.mux.Unlock()
@@ -44,9 +42,8 @@ func (q *LockQueue[T]) Enqueue(val T) bool {
 		return false
 	}
 
-	optional := optional.NewOptional(&val)
 	q.mux.Lock()
-	q.buffer[q.end] = optional
+	q.buffer[q.end] = val
 	q.end++
 	if q.end >= q.maxSize+1 {
 		q.end = 0
@@ -56,9 +53,10 @@ func (q *LockQueue[T]) Enqueue(val T) bool {
 	return true
 }
 
-func (q *LockQueue[T]) Dequeue() optional.Optional[T] {
+func (q *LockQueue[T]) Dequeue() (T, bool) {
 	if q.Len() == 0 {
-		return optional.NewOptional[T](nil)
+		var empty T
+		return empty, false
 	}
 
 	q.mux.Lock()
@@ -69,5 +67,5 @@ func (q *LockQueue[T]) Dequeue() optional.Optional[T] {
 	}
 	q.mux.Unlock()
 
-	return v
+	return v, true
 }

@@ -1,10 +1,8 @@
 package queue
 
-import "github.com/Jh123x/go-collections/optional"
-
 type Queue[T any] interface {
 	// Len returns the length of the queue.
-	Len() int64
+	Len() int
 
 	// Enqueue adds the element to the end of the queue.
 	// Returns true if enqueuing is successful.
@@ -12,5 +10,5 @@ type Queue[T any] interface {
 
 	// Dequeue removes the element at the front of the queue and returns it.
 	// Returns nil if the queue is empty
-	Dequeue() optional.Optional[T]
+	Dequeue() (T, bool)
 }
