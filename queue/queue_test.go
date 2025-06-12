@@ -23,76 +23,10 @@ func TestQueueCorrectness(t *testing.T) {
 	}
 
 	tests := map[string]testFn[string]{
-		"FIFO Property": func(t *testing.T, q Queue[string]) {
-			for idx := range defaultQSize {
-				assert.True(t, q.Enqueue("test"+strconv.FormatInt(int64(idx), 10)))
-			}
-
-			assert.False(t, q.Enqueue("test"+strconv.FormatInt(int64(defaultQSize), 10)))
-
-			for idx := range defaultQSize {
-				item, ok := q.Dequeue()
-				assert.True(t, ok)
-				assert.Equal(t, item, "test"+strconv.FormatInt(int64(idx), 10))
-			}
-
-			_, ok := q.Dequeue()
-			assert.False(t, ok)
-		},
-		"Length Correctness": func(t *testing.T, q Queue[string]) {
-			for idx := range defaultQSize {
-				assert.True(t, q.Enqueue("test"+strconv.FormatInt(int64(idx), 10)))
-				assert.Equal(t, q.Len(), idx+1)
-			}
-
-			assert.False(t, q.Enqueue("test"+strconv.FormatInt(int64(defaultQSize), 10)))
-			assert.Equal(t, q.Len(), defaultQSize)
-
-			for idx := range defaultQSize {
-				expectedItem := "test" + strconv.FormatInt(int64(idx), 10)
-				assert.Equal(t, q.Len(), defaultQSize-idx)
-
-				item, ok := q.Dequeue()
-				assert.True(t, ok)
-				assert.Equal(t, item, expectedItem)
-				assert.Equal(t, q.Len(), defaultQSize-idx-1)
-			}
-
-			_, ok := q.Dequeue()
-			assert.False(t, ok)
-			assert.Equal(t, q.Len(), 0)
-		},
-		"Queue Dequeue correctness": func(t *testing.T, q Queue[string]) {
-			assert.Equal(t, 0, q.Len())
-			for idx := range 1000 {
-				addVal := "test" + strconv.FormatInt(int64(idx), 10)
-				assert.True(t, q.Enqueue(addVal))
-				assert.Equal(t, q.Len(), 1)
-
-				item, ok := q.Dequeue()
-				assert.True(t, ok)
-				assert.Equal(t, item, addVal)
-				assert.Equal(t, q.Len(), 0)
-			}
-			assert.Equal(t, q.Len(), 0)
-		},
-		"Check Race Condition": func(t *testing.T, q Queue[string]) {
-			assert.Equal(t, q.Len(), 0)
-			wg := sync.WaitGroup{}
-			wg.Add(defaultQSize)
-			for idx := range defaultQSize {
-				go func() {
-					defer wg.Done()
-					addVal := "test" + strconv.FormatInt(int64(idx), 10)
-					assert.True(t, q.Enqueue(addVal))
-
-					_, ok := q.Dequeue()
-					assert.True(t, ok)
-				}()
-			}
-			wg.Wait()
-			assert.Equal(t, q.Len(), 0)
-		},
+		"FIFO Property":             testFifoCond,
+		"Length Correctness":        testLenCond,
+		"Queue Dequeue correctness": testDequeueCond,
+		"Check Race Condition":      testRaceCond,
 	}
 
 	for name, fn := range queues {
@@ -104,6 +38,80 @@ func TestQueueCorrectness(t *testing.T) {
 			}
 		})
 	}
+}
+
+func testFifoCond(t *testing.T, q Queue[string]) {
+	for idx := range defaultQSize {
+		assert.True(t, q.Enqueue("test"+strconv.FormatInt(int64(idx), 10)))
+	}
+
+	assert.False(t, q.Enqueue("test"+strconv.FormatInt(int64(defaultQSize), 10)))
+
+	for idx := range defaultQSize {
+		item, ok := q.Dequeue()
+		assert.True(t, ok)
+		assert.Equal(t, item, "test"+strconv.FormatInt(int64(idx), 10))
+	}
+
+	_, ok := q.Dequeue()
+	assert.False(t, ok)
+}
+
+func testLenCond(t *testing.T, q Queue[string]) {
+	for idx := range defaultQSize {
+		assert.True(t, q.Enqueue("test"+strconv.FormatInt(int64(idx), 10)))
+		assert.Equal(t, q.Len(), idx+1)
+	}
+
+	assert.False(t, q.Enqueue("test"+strconv.FormatInt(int64(defaultQSize), 10)))
+	assert.Equal(t, q.Len(), defaultQSize)
+
+	for idx := range defaultQSize {
+		expectedItem := "test" + strconv.FormatInt(int64(idx), 10)
+		assert.Equal(t, q.Len(), defaultQSize-idx)
+
+		item, ok := q.Dequeue()
+		assert.True(t, ok)
+		assert.Equal(t, item, expectedItem)
+		assert.Equal(t, q.Len(), defaultQSize-idx-1)
+	}
+
+	_, ok := q.Dequeue()
+	assert.False(t, ok)
+	assert.Equal(t, q.Len(), 0)
+}
+
+func testDequeueCond(t *testing.T, q Queue[string]) {
+	assert.Equal(t, 0, q.Len())
+	for idx := range 1000 {
+		addVal := "test" + strconv.FormatInt(int64(idx), 10)
+		assert.True(t, q.Enqueue(addVal))
+		assert.Equal(t, q.Len(), 1)
+
+		item, ok := q.Dequeue()
+		assert.True(t, ok)
+		assert.Equal(t, item, addVal)
+		assert.Equal(t, q.Len(), 0)
+	}
+	assert.Equal(t, q.Len(), 0)
+}
+
+func testRaceCond(t *testing.T, q Queue[string]) {
+	assert.Equal(t, q.Len(), 0)
+	wg := sync.WaitGroup{}
+	wg.Add(defaultQSize)
+	for idx := range defaultQSize {
+		go func() {
+			defer wg.Done()
+			addVal := "test" + strconv.FormatInt(int64(idx), 10)
+			assert.True(t, q.Enqueue(addVal))
+
+			_, ok := q.Dequeue()
+			assert.True(t, ok)
+		}()
+	}
+	wg.Wait()
+	assert.Equal(t, q.Len(), 0)
 }
 
 func BenchmarkQueues(b *testing.B) {
