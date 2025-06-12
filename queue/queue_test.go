@@ -30,7 +30,6 @@ func TestQueueCorrectness(t *testing.T) {
 		"FIFO Property":             testFifoCond,
 		"Length Correctness":        testLenCond,
 		"Queue Dequeue correctness": testDequeueCond,
-		"Check Race Condition":      testRaceCond,
 	}
 
 	for name, fn := range queues {
@@ -133,6 +132,26 @@ func BenchmarkSequentialQueues(b *testing.B) {
 				if val, ok := q.Dequeue(); !ok || val != idx {
 					b.Fail()
 				}
+			}
+		})
+	}
+}
+
+func TestQueueParallel(t *testing.T) {
+	queues := map[string]func() LenQueue[string]{
+		"LockQueue": qlWrap(NewLockQueue[string], defaultQSize),
+	}
+
+	tests := map[string]testFn[string]{
+		"Check Race Condition": testRaceCond,
+	}
+
+	for name, fn := range queues {
+		t.Run(name, func(t *testing.T) {
+			for name, tc := range tests {
+				t.Run(name, func(t *testing.T) {
+					tc(t, fn())
+				})
 			}
 		})
 	}
