@@ -10,16 +10,20 @@ import (
 
 const defaultQSize = 5
 
-type testFn[T any] func(*testing.T, Queue[T])
+type testFn[T any] func(*testing.T, LenQueue[T])
+
+func qlWrap[T any, Q LenQueue[T]](fn func(int) Q, size int) func() LenQueue[T] {
+	return func() LenQueue[T] { return fn(size) }
+}
 
 func qWrap[T any, Q Queue[T]](fn func(int) Q, size int) func() Queue[T] {
 	return func() Queue[T] { return fn(size) }
 }
 
 func TestQueueCorrectness(t *testing.T) {
-	queues := map[string]func() Queue[string]{
-		"LockQueue": qWrap(NewLockQueue[string], defaultQSize),
-		"StdQueue":  qWrap(NewStdQueue[string], defaultQSize),
+	queues := map[string]func() LenQueue[string]{
+		"LockQueue": qlWrap(NewLockQueue[string], defaultQSize),
+		"StdQueue":  qlWrap(NewStdQueue[string], defaultQSize),
 	}
 
 	tests := map[string]testFn[string]{
@@ -40,7 +44,7 @@ func TestQueueCorrectness(t *testing.T) {
 	}
 }
 
-func testFifoCond(t *testing.T, q Queue[string]) {
+func testFifoCond(t *testing.T, q LenQueue[string]) {
 	for idx := range defaultQSize {
 		assert.True(t, q.Enqueue("test"+strconv.FormatInt(int64(idx), 10)))
 	}
@@ -57,7 +61,7 @@ func testFifoCond(t *testing.T, q Queue[string]) {
 	assert.False(t, ok)
 }
 
-func testLenCond(t *testing.T, q Queue[string]) {
+func testLenCond(t *testing.T, q LenQueue[string]) {
 	for idx := range defaultQSize {
 		assert.True(t, q.Enqueue("test"+strconv.FormatInt(int64(idx), 10)))
 		assert.Equal(t, q.Len(), idx+1)
@@ -81,7 +85,7 @@ func testLenCond(t *testing.T, q Queue[string]) {
 	assert.Equal(t, q.Len(), 0)
 }
 
-func testDequeueCond(t *testing.T, q Queue[string]) {
+func testDequeueCond(t *testing.T, q LenQueue[string]) {
 	assert.Equal(t, 0, q.Len())
 	for idx := range 1000 {
 		addVal := "test" + strconv.FormatInt(int64(idx), 10)
@@ -96,7 +100,7 @@ func testDequeueCond(t *testing.T, q Queue[string]) {
 	assert.Equal(t, q.Len(), 0)
 }
 
-func testRaceCond(t *testing.T, q Queue[string]) {
+func testRaceCond(t *testing.T, q LenQueue[string]) {
 	assert.Equal(t, q.Len(), 0)
 	wg := sync.WaitGroup{}
 	wg.Add(defaultQSize)
@@ -114,7 +118,7 @@ func testRaceCond(t *testing.T, q Queue[string]) {
 	assert.Equal(t, q.Len(), 0)
 }
 
-func BenchmarkQueues(b *testing.B) {
+func BenchmarkSequentialQueues(b *testing.B) {
 	queues := map[string]func() Queue[int]{
 		"LockQueue": qWrap(NewLockQueue[int], defaultQSize),
 		"StdQueue":  qWrap(NewStdQueue[int], defaultQSize),
@@ -127,6 +131,28 @@ func BenchmarkQueues(b *testing.B) {
 			for idx := range b.N {
 				q.Enqueue(idx)
 				if val, ok := q.Dequeue(); !ok || val != idx {
+					b.Fail()
+				}
+			}
+		})
+	}
+}
+
+func BenchmarkParallelQueues(b *testing.B) {
+	queues := map[string]func() Queue[int]{
+		"LockQueue": qWrap(NewLockQueue[int], defaultQSize),
+	}
+
+	for name, fn := range queues {
+		b.Run(name, func(b *testing.B) {
+			b.ReportAllocs()
+			q := fn()
+			wg := sync.WaitGroup{}
+			wg.Add(b.N)
+			for idx := range b.N {
+				wg.Done()
+				q.Enqueue(idx)
+				if _, ok := q.Dequeue(); !ok {
 					b.Fail()
 				}
 			}
