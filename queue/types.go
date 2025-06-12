@@ -15,6 +15,6 @@ type LenQueue[T any] interface {
 	// Len returns the length of the queue.
 	Len() int
 
-	// Should also implement the interface for a queue.
+	// Should also implement other queue methods.
 	Queue[T]
 }
