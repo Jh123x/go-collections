@@ -1,7 +1,6 @@
 package heap
 
 import (
-	"fmt"
 	"math/rand/v2"
 	"testing"
 
@@ -84,6 +83,34 @@ func testPushPopInterleaf(t *testing.T, pq PriorityQueue[int]) {
 	assert.True(t, ok)
 	assert.Equal(t, 13, v)
 	assert.Equal(t, 4, pq.Len())
+
+	pq.Insert(0)
+	assert.Equal(t, 5, pq.Len())
+
+	v, ok = pq.Pop()
+	assert.True(t, ok)
+	assert.Equal(t, 0, v)
+	assert.Equal(t, 4, pq.Len())
+
+	v, ok = pq.Pop()
+	assert.True(t, ok)
+	assert.Equal(t, 14, v)
+	assert.Equal(t, 3, pq.Len())
+
+	v, ok = pq.Pop()
+	assert.True(t, ok)
+	assert.Equal(t, 20, v)
+	assert.Equal(t, 2, pq.Len())
+
+	v, ok = pq.Pop()
+	assert.True(t, ok)
+	assert.Equal(t, 31, v)
+	assert.Equal(t, 1, pq.Len())
+
+	v, ok = pq.Pop()
+	assert.True(t, ok)
+	assert.Equal(t, 45, v)
+	assert.Equal(t, 0, pq.Len())
 }
 
 func testPushPop(t *testing.T, pq PriorityQueue[int]) {
@@ -105,7 +132,6 @@ func testRandomSample(t *testing.T, pq PriorityQueue[int]) {
 	for idx := range insertSize {
 		no := rand.IntN(5000)
 		pq.Insert(no)
-		fmt.Println(no)
 		assert.Equal(t, idx+1, pq.Len())
 	}
 	assert.Equal(t, insertSize, pq.Len())
