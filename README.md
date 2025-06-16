@@ -2,9 +2,11 @@
 
 A collection of Go data structures
 
-## Planned data structures
-
+## Completed Collections
 1. Queue
 2. Heap
-3. Binary Search Tree
-4. Stack
+
+## Planned data structures
+
+1. Heap
+2. Binary Search Tree
