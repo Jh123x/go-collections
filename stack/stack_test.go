@@ -91,11 +91,11 @@ func testRaceCond(t *testing.T, s LenStack[int]) {
 	assert.Equal(t, s.Len(), 0)
 }
 func BenchmarkSequentialStack(b *testing.B) {
-	queues := map[string]func() LenStack[int]{
-		"LockQueue": slWrap(NewLockStack[int], defaultStackSize),
+	stacks := map[string]func() LenStack[int]{
+		"LockStack": slWrap(NewLockStack[int], defaultStackSize),
 	}
 
-	for name, fn := range queues {
+	for name, fn := range stacks {
 		b.Run(name, func(b *testing.B) {
 			b.ReportAllocs()
 			q := fn()
@@ -110,7 +110,7 @@ func BenchmarkSequentialStack(b *testing.B) {
 }
 
 func TestStackParallel(t *testing.T) {
-	queues := map[string]func() LenStack[int]{
+	stacks := map[string]func() LenStack[int]{
 		"LockStack": slWrap(NewLockStack[int], defaultStackSize),
 	}
 
@@ -118,7 +118,7 @@ func TestStackParallel(t *testing.T) {
 		"Check Race Condition": testRaceCond,
 	}
 
-	for name, fn := range queues {
+	for name, fn := range stacks {
 		t.Run(name, func(t *testing.T) {
 			for name, tc := range tests {
 				t.Run(name, func(t *testing.T) {
