@@ -148,3 +148,22 @@ func testRandomSample(t *testing.T, pq PriorityQueue[int]) {
 		prev = v
 	}
 }
+
+func BenchmarkHeaps(b *testing.B) {
+	heaps := map[string]func() PriorityQueue[int]{
+		"Heap": wrap(NewMinHeap[int]),
+	}
+
+	for name, fn := range heaps {
+		b.Run(name, func(b *testing.B) {
+			heap := fn()
+			for idx := range b.N {
+				heap.Insert(idx)
+				r, ok := heap.Pop()
+				if !ok || r != idx {
+					b.FailNow()
+				}
+			}
+		})
+	}
+}
