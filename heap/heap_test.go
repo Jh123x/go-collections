@@ -2,6 +2,7 @@ package heap
 
 import (
 	"math/rand/v2"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,6 +21,7 @@ func TestHeap(t *testing.T) {
 		"Push Pop consecutive": testPushPop,
 		"Random Sample":        testRandomSample,
 		"Push Pop interleave":  testPushPopInterleaf,
+		"Push Pop other case":  testCommonErrorCase,
 	}
 
 	for name, fn := range heaps {
@@ -30,6 +32,22 @@ func TestHeap(t *testing.T) {
 				})
 			}
 		})
+	}
+}
+
+func testCommonErrorCase(t *testing.T, pq PriorityQueue[int]) {
+	insertSeq := []int{1396, 391, 1451, 3415, 1987, 4206, 4561, 2166, 3995, 4296}
+
+	for _, v := range insertSeq {
+		pq.Insert(v)
+	}
+
+	sort.Ints(insertSeq)
+
+	for _, v := range insertSeq {
+		res, ok := pq.Pop()
+		assert.True(t, ok)
+		assert.Equal(t, v, res)
 	}
 }
 
@@ -131,6 +149,7 @@ func testRandomSample(t *testing.T, pq PriorityQueue[int]) {
 	insertSize := 10
 	for idx := range insertSize {
 		no := rand.IntN(5000)
+		t.Logf("inserted: %d", no)
 		pq.Insert(no)
 		assert.Equal(t, idx+1, pq.Len())
 	}

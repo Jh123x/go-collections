@@ -32,7 +32,7 @@ func (p *MinHeap[T]) Insert(val T) {
 
 func (p *MinHeap[T]) Pop() (T, bool) {
 	len := p.Len()
-	if len < 0 {
+	if len <= 0 {
 		var empty T
 		return empty, false
 	}
@@ -66,6 +66,10 @@ func (p *MinHeap[T]) Pop() (T, bool) {
 
 		lVal := p.buffer[lIdx]
 		rVal := p.buffer[rIdx]
+
+		if startVal < lVal && startVal < rVal {
+			break
+		}
 
 		if lVal < rVal {
 			p.buffer[lIdx], p.buffer[start] = p.buffer[start], p.buffer[lIdx]
