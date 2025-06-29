@@ -2,8 +2,11 @@ package trie
 
 import (
 	"testing"
+	"time"
+	"unsafe"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/rand"
 )
 
 func TestTrie(t *testing.T) {
@@ -59,6 +62,54 @@ func TestTrie(t *testing.T) {
 	}
 }
 
-func BenchmarkTrie(b *testing.B) {
+const lenItems = 20
 
+func BenchmarkTrie_Write(b *testing.B) {
+	trie := NewTrie()
+	for i := 0; i < b.N; i++ {
+		ranStr := RandStringBytesMaskImprSrcUnsafe(lenItems)
+		trie.AddWords(ranStr)
+	}
+}
+
+const wordLens = 64
+
+func BenchmarkTrie_Read(b *testing.B) {
+	words := make([]string, 0, wordLens)
+	for i := 0; i < wordLens; i++ {
+		words = append(words, RandStringBytesMaskImprSrcUnsafe(i))
+	}
+
+	trie := NewTrie(words...)
+	for j := 0; j < b.N; j++ {
+		assert.True(b, trie.HasWord(words[j%wordLens]))
+	}
+}
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const (
+	letterIdxBits = 6                    // 6 bits to represent a letter index
+	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+)
+
+var src = rand.NewSource(uint64(time.Now().UnixNano()))
+
+func RandStringBytesMaskImprSrcUnsafe(n int) string {
+	b := make([]byte, n)
+	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
+	for i, cache, remain := n-1, src.Uint64(), letterIdxMax; i >= 0; {
+		if remain == 0 {
+			cache, remain = src.Uint64(), letterIdxMax
+		}
+
+		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
+			b[i] = letterBytes[idx]
+			i--
+		}
+		cache >>= letterIdxBits
+		remain--
+	}
+
+	return *(*string)(unsafe.Pointer(&b))
 }
