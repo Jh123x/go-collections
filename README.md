@@ -7,6 +7,6 @@ A collection of Go data structures and common patterns.
 - [x] Stack
 - [x] Heap
 - [x] Optional
-- [ ] Periodic Refresh Cache
+- [x] Refresh Cache
 - [ ] State transitions
 - [ ] Binary Search Tree
