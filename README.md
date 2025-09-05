@@ -1,11 +1,12 @@
 # go-collections
 
-A collection of Go data structures
+A collection of Go data structures and common patterns.
 
-## Completed Collections
-1. Queue
-2. Stack
-3. Heap
-
-## Planned data structures
-1. Binary Search Tree
+## Features
+- [x] Queue
+- [x] Stack
+- [x] Heap
+- [x] Optional
+- [ ] Periodic Refresh Cache
+- [ ] State transitions
+- [ ] Binary Search Tree
