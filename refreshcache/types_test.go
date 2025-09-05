@@ -3,6 +3,7 @@ package refreshcache
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -45,9 +46,9 @@ func TestRefreshCache_InitialLoad(t *testing.T) {
 }
 
 func TestRefreshCache_ParallelAccess(t *testing.T) {
-	refreshCount := 0
+	var v int32
 	loader := func() (int, error) {
-		refreshCount++
+		atomic.AddInt32(&v, 1)
 		return 5, nil
 	}
 
@@ -64,7 +65,7 @@ func TestRefreshCache_ParallelAccess(t *testing.T) {
 	}
 
 	wg.Wait()
-	assert.Greater(t, refreshCount, 1, "loader should have been called multiple times")
+	assert.Greater(t, atomic.LoadInt32(&v), int32(1), "loader should have been called multiple times")
 }
 
 func BenchmarkRefreshCache(b *testing.B) {
