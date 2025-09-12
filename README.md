@@ -8,5 +8,6 @@ A collection of Go data structures and common patterns.
 - [x] Heap
 - [x] Optional
 - [x] Refresh Cache
+- [ ] Worker Pool
 - [ ] State transitions
 - [ ] Binary Search Tree
