@@ -6,4 +6,3 @@ type Multifilter[T comparable, R any] interface {
 	// in nil as its search value.
 	Search(dimensions ...[]T) []R
 }
-

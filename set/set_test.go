@@ -40,8 +40,8 @@ func TestSet_Len(t *testing.T) {
 			addVals:     []string{"test", "test", "test2"},
 			expectedLen: 2,
 		},
-		"non duplicates should count all":{
-			addVals: []string{"test","test2","test3"},
+		"non duplicates should count all": {
+			addVals:     []string{"test", "test2", "test3"},
 			expectedLen: 3,
 		},
 	}

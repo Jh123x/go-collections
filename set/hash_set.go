@@ -1,6 +1,5 @@
 package set
 
-
 var (
 	_ Set[string] = HashSet[string]{}
 )

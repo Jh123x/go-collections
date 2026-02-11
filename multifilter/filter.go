@@ -73,4 +73,3 @@ func (h *HashFilter[T, R]) Search(dimensions ...[]T) []R {
 
 	return finalReturn
 }
-
