@@ -161,9 +161,9 @@ func TestSet_Union(t *testing.T) {
 			expectResults: []string{"test", "test2"},
 		},
 		"1 empty set inverted": {
-			setA: []string{"test","test2"},
-			setB: []string{},
-			expectResults: []string{"test","test2"},
+			setA:          []string{"test", "test2"},
+			setB:          []string{},
+			expectResults: []string{"test", "test2"},
 		},
 		"non empty sets": {
 			setA:          []string{"test1", "test2"},
