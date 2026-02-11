@@ -1,5 +1,6 @@
 package set
 
+
 var (
 	_ Set[string] = HashSet[string]{}
 )
@@ -15,7 +16,7 @@ func NewHashSet[T comparable]() HashSet[T] {
 func (h HashSet[T]) Add(values ...T) {
 	for _, value := range values {
 		if _, ok := h[value]; ok {
-			return
+			continue
 		}
 
 		h[value] = empty{}
