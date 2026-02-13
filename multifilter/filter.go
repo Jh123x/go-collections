@@ -18,6 +18,11 @@ type HashFilter[T comparable, R any] struct {
 func NewHashFilter[T comparable, R any](results []FilterHelper[T, R], dimensions int) (*HashFilter[T, R], error) {
 	data := make([]R, 0, len(results))
 	filters := make([]map[T]set.Set[int], dimensions)
+
+	for idx := range filters {
+		filters[idx] = make(map[T]set.Set[int])
+	}
+
 	for resultIdx, val := range results {
 		data = append(data, val.Result)
 
